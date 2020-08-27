@@ -1,36 +1,30 @@
-# AutoInvalidCache
+自动更新对象的缓存，每个对象可有多个不同的缓存，对象更新，对应的缓存则失效
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/auto_invalid_cache`. To experiment with that code, run `bin/console` for an interactive prompt.
+该 gem 依赖 `Rails`
 
-TODO: Delete this and the text above, and describe your gem
+# 使用说明
 
-## Installation
-
-Add this line to your application's Gemfile:
+示例代码
 
 ```ruby
-gem 'auto_invalid_cache'
+class Page < ActiveRecord::Base
+  def calculate_something
+    cache('calculate_something') do
+      # do something
+    end
+  end
+end
+
+page = Page.create
+# rails 缓存会生成一个 Page/1/calculate_something 这样的缓存键（model名/对象id/传入的namespace）
+page.calculate_something # 会进入block中做相应的计算
+page.calculate_something # 直接读取缓存，不会进行block里面的计算
+page.save
+page.calculate_something # 会进入block中做相应的计算
+page.touch
+page.calculate_something # 会进入block中做相应的计算
+page.update_columns(status: 1)
+page.calculate_something # 直接读取缓存，不会进行block里面的计算(如果跳过了rails的回调话，则不能更新缓存)
 ```
 
-And then execute:
-
-    $ bundle install
-
-Or install it yourself as:
-
-    $ gem install auto_invalid_cache
-
-## Usage
-
-TODO: Write usage instructions here
-
-## Development
-
-After checking out the repo, run `bin/setup` to install dependencies. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
-
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
-
-## Contributing
-
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/auto_invalid_cache.
-
+并且支持 `Rails.cache.fetch` 里面所支持的参数， 详细请查看rails相关文档
