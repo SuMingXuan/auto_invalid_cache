@@ -37,15 +37,15 @@ module AutoInvalidCache
 
   module ClassMethods
     def self.extended(base)
-      base.class_variable_set(:@@auto_invalid_cache_keys, [])
+      base.class_variable_set(:@@auto_invalid_cache_keys, Set.new)
     end
 
     def auto_invalid_cache_keys
-      class_variable_get(:@@auto_invalid_cache_keys).uniq
+      class_variable_get(:@@auto_invalid_cache_keys)
     end
 
     def auto_invalid_cache_keys_add(key)
-      class_variable_set(:@@auto_invalid_cache_keys, auto_invalid_cache_keys << key)
+      auto_invalid_cache_keys.add(key)
     end
   end
 end
