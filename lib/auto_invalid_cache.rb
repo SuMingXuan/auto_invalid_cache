@@ -2,6 +2,7 @@ require "auto_invalid_cache/version"
 
 module AutoInvalidCache
   extend ActiveSupport::Concern
+  class CacheNamespaceTypeError < StandardError; end
 
   included do
     extend ClassMethods
@@ -14,19 +15,20 @@ module AutoInvalidCache
   module InstanceMethods
     def cache(cache_namespace, **options, &block)
       if cache_namespace.is_a?(String) || cache_namespace.is_a?(Symbol)
-        cache_key = generate_cache_key(cache_namespace.to_s)
+        cache_namespace = cache_namespace.to_s
+        cache_key = generate_cache_key(cache_namespace)
       else
-        raise "cache_namespace must be String or Symbol"
+        raise CacheNamespaceTypeError.new "cache_namespace must be String or Symbol"
       end
       Rails.cache.fetch(cache_key, **options) do
-        self.class.auto_invalid_cache_keys_add(cache_key)
+        self.class.auto_invalid_cache_keys_add(cache_namespace)
         yield block if block_given?
       end
     end
 
     def delete_caches
-      self.class.auto_invalid_cache_keys.each do |ck|
-        Rails.cache.delete(ck)
+      self.class.auto_invalid_cache_keys.each do |ns|
+        Rails.cache.delete(generate_cache_key(ns))
       end
     end
 
